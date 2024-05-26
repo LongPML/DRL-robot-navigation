@@ -2,4 +2,4 @@ catkin_ws/build_isolated/
 catkin_ws/devel_isolated/
 catkin_ws/.catkin_workspace
 
-DRL-robot-navigation/TD3/runs/*
+TD3/runs/*
