@@ -61,19 +61,17 @@ RUN if [ ! $TORCHAUDIO_VERSION ]; \
 
 # FROM nvcr.io/nvidia/pytorch:21.10-py3
 
-# Timezone
-RUN echo 'Asia/Ho_Chi_Minh' > /etc/timezone && \
-    ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime  
+ARG DEBIAN_FRONTEND=noninteractive
 
 # Essential packages
-RUN apt-get update && apt-get install -y --no-install-recommends\
+RUN apt-get update && apt-get install -y \
     build-essential curl 
 
 # ROS
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu focal main" > /etc/apt/sources.list.d/ros-latest.list'
 RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
 
-RUN apt-get update && apt-get install -y --fix-missing --no-install-recommends \
+RUN apt-get update && apt-get install -y --fix-missing \
     ros-noetic-desktop-full
 
 SHELL ["/bin/bash", "-c"]
