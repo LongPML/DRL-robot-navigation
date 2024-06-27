@@ -7,7 +7,7 @@ xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
 
 docker run -it \
     --user $USERNAME \
-    --name noetic_desktop_full \
+    --name robot_navigate \
     --network host --ipc host \
     -v $(pwd):/home/$USERNAME/$(basename $(pwd)) -w /home/$USERNAME/$(basename $(pwd)) \
     --privileged \
