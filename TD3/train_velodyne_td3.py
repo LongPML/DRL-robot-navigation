@@ -6,9 +6,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from numpy import inf
-from torch.utils.tensorboard import SummaryWriter
-
 from replay_buffer import ReplayBuffer
+from torch.utils.tensorboard import SummaryWriter
 from velodyne_env import GazeboEnv
 
 

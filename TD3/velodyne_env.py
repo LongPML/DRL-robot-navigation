@@ -14,8 +14,7 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import PointCloud2
 from squaternion import Quaternion
 from std_srvs.srv import Empty
-from visualization_msgs.msg import Marker
-from visualization_msgs.msg import MarkerArray
+from visualization_msgs.msg import Marker, MarkerArray
 
 GOAL_REACHED_DIST = 0.3
 COLLISION_DIST = 0.35
@@ -129,6 +128,7 @@ class GazeboEnv:
         self.odom = rospy.Subscriber(
             "/r1/odom", Odometry, self.odom_callback, queue_size=1
         )
+        self.random_box()
 
     # Read velodyne pointcloud and turn it into distance data, then select the minimum value for each angle
     # range as state representation
@@ -165,7 +165,7 @@ class GazeboEnv:
         rospy.wait_for_service("/gazebo/unpause_physics")
         try:
             self.unpause()
-        except (rospy.ServiceException) as e:
+        except rospy.ServiceException as e:
             print("/gazebo/unpause_physics service call failed")
 
         # propagate state for TIME_DELTA seconds
@@ -175,7 +175,7 @@ class GazeboEnv:
         try:
             pass
             self.pause()
-        except (rospy.ServiceException) as e:
+        except rospy.ServiceException as e:
             print("/gazebo/pause_physics service call failed")
 
         # read velodyne laser state
@@ -273,7 +273,7 @@ class GazeboEnv:
         rospy.wait_for_service("/gazebo/unpause_physics")
         try:
             self.unpause()
-        except (rospy.ServiceException) as e:
+        except rospy.ServiceException as e:
             print("/gazebo/unpause_physics service call failed")
 
         time.sleep(TIME_DELTA)
@@ -281,7 +281,7 @@ class GazeboEnv:
         rospy.wait_for_service("/gazebo/pause_physics")
         try:
             self.pause()
-        except (rospy.ServiceException) as e:
+        except rospy.ServiceException as e:
             print("/gazebo/pause_physics service call failed")
         v_state = []
         v_state[:] = self.velodyne_data[:]

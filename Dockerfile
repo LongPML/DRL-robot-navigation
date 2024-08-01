@@ -44,7 +44,7 @@ ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:-compute,utility}
 # Essential packages
 RUN apt-get update && \
     apt-get install -y \
-        wget build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev \
+        psmisc wget build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev \
         libreadline-dev libffi-dev libsqlite3-dev libbz2-dev liblzma-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
