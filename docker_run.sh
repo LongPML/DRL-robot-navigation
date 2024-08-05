@@ -1,9 +1,8 @@
 #!/bin/bash
 USERNAME=noetic
 XSOCK=/tmp/.X11-unix
-XAUTH=/tmp/.docker.xauth
-touch $XAUTH
-xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
+
+xhost +local:$USERNAME
 
 docker run -it \
     --user $USERNAME \
@@ -11,10 +10,12 @@ docker run -it \
     --network host --ipc host \
     -v $(pwd):/home/$USERNAME/$(basename $(pwd)) -w /home/$USERNAME/$(basename $(pwd)) \
     --privileged \
-    --gpus all \
+    --env=DISPLAY \
     --volume=$XSOCK:$XSOCK:rw \
-    --volume=$XAUTH:$XAUTH:rw \
-    --env="XAUTHORITY=${XAUTH}" \
-    --env="DISPLAY" \
+    --gpus all --runtime nvidia \
+    --env="QT_X11_NO_MITSHM=1" \
+    --env="NVIDIA_DRIVER_CAPABILITIES=all" \
+    --env="NVIDIA_VISIBLE_DEVICES=all" \
+    --device /dev/dri:/dev/dri \
     navigate-robot:noetic-py3.8.10-torch1.10.0-cu111 \
     bash
