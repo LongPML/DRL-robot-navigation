@@ -1,23 +1,23 @@
-import rospy
-import subprocess
-from os import path
-from visualization_msgs.msg import Marker
-from visualization_msgs.msg import MarkerArray
-from numpy import inf
-import numpy as np
-import random
 import math
-from gazebo_msgs.msg import ModelState
-from squaternion import Quaternion
-from geometry_msgs.msg import Twist
-from sensor_msgs.msg import LaserScan, PointCloud2
-import sensor_msgs.point_cloud2 as pc2
-from nav_msgs.msg import Odometry
-from std_srvs.srv import Empty
 import os
+import random
+import subprocess
 import time
+from os import path
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+import numpy as np
+import rospy
+import sensor_msgs.point_cloud2 as pc2
+from gazebo_msgs.msg import ModelState
+from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
+from numpy import inf
+from sensor_msgs.msg import LaserScan, PointCloud2
+from squaternion import Quaternion
+from std_srvs.srv import Empty
+from visualization_msgs.msg import Marker, MarkerArray
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 
 # Check if the random goal position is located on an obstacle and do not accept it if it is
@@ -65,14 +65,14 @@ def binning(lower_bound, data, quantity):
     quantity -= 1
     bins = []
     for low in range(lower_bound, lower_bound + quantity * width + 1, width):
-        bins.append(min(data[low:low + width]))
+        bins.append(min(data[low : low + width]))
     return np.array([bins])
 
 
 class GazeboEnv:
-    """Superclass for all Gazebo environments.
-    """
-    metadata = {'render.modes': ['human']}
+    """Superclass for all Gazebo environments."""
+
+    metadata = {"render.modes": ["human"]}
 
     def __init__(self, launchfile, height, width, nchannels):
 
@@ -87,27 +87,29 @@ class GazeboEnv:
         self.velodyne_data = np.ones(20) * 10
 
         self.set_self_state = ModelState()
-        self.set_self_state.model_name = 'r1'
-        self.set_self_state.pose.position.x = 0.
-        self.set_self_state.pose.position.y = 0.
-        self.set_self_state.pose.position.z = 0.
+        self.set_self_state.model_name = "r1"
+        self.set_self_state.pose.position.x = 0.0
+        self.set_self_state.pose.position.y = 0.0
+        self.set_self_state.pose.position.z = 0.0
         self.set_self_state.pose.orientation.x = 0.0
         self.set_self_state.pose.orientation.y = 0.0
         self.set_self_state.pose.orientation.z = 0.0
         self.set_self_state.pose.orientation.w = 1.0
-        self.distOld = math.sqrt(math.pow(self.odomX - self.goalX, 2) + math.pow(self.odomY - self.goalY, 2))
+        self.distOld = math.sqrt(
+            math.pow(self.odomX - self.goalX, 2) + math.pow(self.odomY - self.goalY, 2)
+        )
         self.gaps = [[-1.6, -1.57 + 3.14 / 20]]
         for m in range(19):
             self.gaps.append([self.gaps[m][1], self.gaps[m][1] + 3.14 / 20])
         self.gaps[-1][-1] += 0.03
 
-        port = '11311'
+        port = "11311"
         subprocess.Popen(["roscore", "-p", port])
 
         print("Roscore launched!")
 
         # Launch the simulation with the given launchfile name
-        rospy.init_node('gym', anonymous=True)
+        rospy.init_node("gym", anonymous=True)
         if launchfile.startswith("/"):
             fullpath = launchfile
         else:
@@ -121,20 +123,24 @@ class GazeboEnv:
         self.gzclient_pid = 0
 
         # Set up the ROS publishers and subscribers
-        self.vel_pub = rospy.Publisher('/r1/cmd_vel', Twist, queue_size=1)
-        self.set_state = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=10)
-        self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
-        self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
-        self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_world', Empty)
-        topic = 'vis_mark_array'
+        self.vel_pub = rospy.Publisher("/r1/cmd_vel", Twist, queue_size=1)
+        self.set_state = rospy.Publisher(
+            "gazebo/set_model_state", ModelState, queue_size=10
+        )
+        self.unpause = rospy.ServiceProxy("/gazebo/unpause_physics", Empty)
+        self.pause = rospy.ServiceProxy("/gazebo/pause_physics", Empty)
+        self.reset_proxy = rospy.ServiceProxy("/gazebo/reset_world", Empty)
+        topic = "vis_mark_array"
         self.publisher = rospy.Publisher(topic, MarkerArray, queue_size=3)
-        topic2 = 'vis_mark_array2'
+        topic2 = "vis_mark_array2"
         self.publisher2 = rospy.Publisher(topic2, MarkerArray, queue_size=1)
-        topic3 = 'vis_mark_array3'
+        topic3 = "vis_mark_array3"
         self.publisher3 = rospy.Publisher(topic3, MarkerArray, queue_size=1)
-        topic4 = 'vis_mark_array4'
+        topic4 = "vis_mark_array4"
         self.publisher4 = rospy.Publisher(topic4, MarkerArray, queue_size=1)
-        self.velodyne = rospy.Subscriber('/velodyne_points', PointCloud2, self.velodyne_callback, queue_size=1)
+        self.velodyne = rospy.Subscriber(
+            "/velodyne_points", PointCloud2, self.velodyne_callback, queue_size=1
+        )
 
     # Read velodyne pointcloud and turn it into distance data, then select the minimum value for each angle
     # range as state representation
@@ -164,7 +170,7 @@ class GazeboEnv:
         for i, item in enumerate(data.ranges):
             if min_laser > data.ranges[i]:
                 min_laser = data.ranges[i]
-            if (min_range > data.ranges[i] > 0):
+            if min_range > data.ranges[i] > 0:
                 done = True
                 col = True
         return done, col, min_laser
@@ -172,23 +178,25 @@ class GazeboEnv:
     # Perform an action and read a new state
     def step(self, act):
         target = False
-        
+
         # Publish the robot action
         vel_cmd = Twist()
         vel_cmd.linear.x = act[0]
         vel_cmd.angular.z = act[1]
         self.vel_pub.publish(vel_cmd)
-        
-        rospy.wait_for_service('/gazebo/unpause_physics')
+
+        rospy.wait_for_service("/gazebo/unpause_physics")
         try:
             self.unpause()
-        except (rospy.ServiceException) as e:
+        except rospy.ServiceException as e:
             print("/gazebo/unpause_physics service call failed")
 
         data = None
         while data is None:
             try:
-                data = rospy.wait_for_message('/r1/front_laser/scan', LaserScan, timeout=0.5)
+                data = rospy.wait_for_message(
+                    "/r1/front_laser/scan", LaserScan, timeout=0.5
+                )
             except:
                 pass
 
@@ -202,15 +210,15 @@ class GazeboEnv:
         dataOdom = None
         while dataOdom is None:
             try:
-                dataOdom = rospy.wait_for_message('/r1/odom', Odometry, timeout=0.5)
+                dataOdom = rospy.wait_for_message("/r1/odom", Odometry, timeout=0.5)
             except:
                 pass
         time.sleep(0.1)
-        rospy.wait_for_service('/gazebo/pause_physics')
+        rospy.wait_for_service("/gazebo/pause_physics")
         try:
             pass
             self.pause()
-        except (rospy.ServiceException) as e:
+        except rospy.ServiceException as e:
             print("/gazebo/pause_physics service call failed")
 
         # Calculate robot heading from odometry data
@@ -220,12 +228,15 @@ class GazeboEnv:
             dataOdom.pose.pose.orientation.w,
             dataOdom.pose.pose.orientation.x,
             dataOdom.pose.pose.orientation.y,
-            dataOdom.pose.pose.orientation.z)
+            dataOdom.pose.pose.orientation.z,
+        )
         euler = quaternion.to_euler(degrees=False)
         angle = round(euler[2], 4)
 
         # Calculate distance to the goal from the robot
-        Dist = math.sqrt(math.pow(self.odomX - self.goalX, 2) + math.pow(self.odomY - self.goalY, 2))
+        Dist = math.sqrt(
+            math.pow(self.odomX - self.goalX, 2) + math.pow(self.odomY - self.goalY, 2)
+        )
 
         # Calculate the angle distance between the robots heading and heading toward the goal
         skewX = self.goalX - self.odomX
@@ -239,7 +250,7 @@ class GazeboEnv:
                 beta = -beta
             else:
                 beta = 0 - beta
-        beta2 = (beta - angle)
+        beta2 = beta - angle
         if beta2 > np.pi:
             beta2 = np.pi - beta2
             beta2 = -np.pi - beta2
@@ -335,7 +346,7 @@ class GazeboEnv:
         markerArray4.markers.append(marker4)
         self.publisher4.publish(markerArray4)
 
-        '''Bunch of different ways to generate the reward'''
+        """Bunch of different ways to generate the reward"""
 
         # reward = act[0]*0.7-abs(act[1])
         # r1 = 1 - 2 * math.sqrt(abs(beta2 / np.pi))
@@ -355,7 +366,10 @@ class GazeboEnv:
         if Dist < 0.3:
             target = True
             done = True
-            self.distOld = math.sqrt(math.pow(self.odomX - self.goalX, 2) + math.pow(self.odomY - self.goalY, 2))
+            self.distOld = math.sqrt(
+                math.pow(self.odomX - self.goalX, 2)
+                + math.pow(self.odomY - self.goalY, 2)
+            )
             reward = 80
 
         # Detect if ta collision has happened and give a large negative reward
@@ -369,7 +383,7 @@ class GazeboEnv:
     def reset(self):
 
         # Resets the state of the environment and returns an initial observation.
-        rospy.wait_for_service('/gazebo/reset_world')
+        rospy.wait_for_service("/gazebo/reset_world")
         try:
             self.reset_proxy()
 
@@ -377,7 +391,7 @@ class GazeboEnv:
             print("/gazebo/reset_simulation service call failed")
 
         angle = np.random.uniform(-np.pi, np.pi)
-        quaternion = Quaternion.from_euler(0., 0., angle)
+        quaternion = Quaternion.from_euler(0.0, 0.0, angle)
         object_state = self.set_self_state
 
         x = 0
@@ -401,30 +415,36 @@ class GazeboEnv:
 
         self.change_goal()
         self.random_box()
-        self.distOld = math.sqrt(math.pow(self.odomX - self.goalX, 2) + math.pow(self.odomY - self.goalY, 2))
+        self.distOld = math.sqrt(
+            math.pow(self.odomX - self.goalX, 2) + math.pow(self.odomY - self.goalY, 2)
+        )
 
         data = None
-        rospy.wait_for_service('/gazebo/unpause_physics')
+        rospy.wait_for_service("/gazebo/unpause_physics")
         try:
             self.unpause()
-        except (rospy.ServiceException) as e:
+        except rospy.ServiceException as e:
             print("/gazebo/unpause_physics service call failed")
         while data is None:
             try:
-                data = rospy.wait_for_message('/r1/front_laser/scan', LaserScan, timeout=0.5)
+                data = rospy.wait_for_message(
+                    "/r1/front_laser/scan", LaserScan, timeout=0.5
+                )
             except:
                 pass
         laser_state = np.array(data.ranges[:])
         laser_state[laser_state == inf] = 10
         laser_state = binning(0, laser_state, 20)
 
-        rospy.wait_for_service('/gazebo/pause_physics')
+        rospy.wait_for_service("/gazebo/pause_physics")
         try:
             self.pause()
-        except (rospy.ServiceException) as e:
+        except rospy.ServiceException as e:
             print("/gazebo/pause_physics service call failed")
 
-        Dist = math.sqrt(math.pow(self.odomX - self.goalX, 2) + math.pow(self.odomY - self.goalY, 2))
+        Dist = math.sqrt(
+            math.pow(self.odomX - self.goalX, 2) + math.pow(self.odomY - self.goalY, 2)
+        )
 
         skewX = self.goalX - self.odomX
         skewY = self.goalY - self.odomY
@@ -439,7 +459,7 @@ class GazeboEnv:
                 beta = -beta
             else:
                 beta = 0 - beta
-        beta2 = (beta - angle)
+        beta2 = beta - angle
 
         if beta2 > np.pi:
             beta2 = np.pi - beta2
@@ -469,7 +489,7 @@ class GazeboEnv:
     # Randomly change the location of the boxes in the environment on each reset to randomize the training environment
     def random_box(self):
         for i in range(4):
-            name = 'cardboard_box_' + str(i)
+            name = "cardboard_box_" + str(i)
 
             x = 0
             y = 0
@@ -486,7 +506,7 @@ class GazeboEnv:
             box_state.model_name = name
             box_state.pose.position.x = x
             box_state.pose.position.y = y
-            box_state.pose.position.z = 0.
+            box_state.pose.position.z = 0.0
             box_state.pose.orientation.x = 0.0
             box_state.pose.orientation.y = 0.0
             box_state.pose.orientation.z = 0.0

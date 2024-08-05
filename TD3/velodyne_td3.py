@@ -1,16 +1,17 @@
 import os
 import time
+from collections import deque
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from velodyne_env import GazeboEnv
 from replay_buffer2 import ReplayBuffer
-from collections import deque
+from velodyne_env import GazeboEnv
 
 
 def evaluate(network, eval_episodes=10, epoch=0):
-    avg_reward = 0.
+    avg_reward = 0.0
     col = 0
     for _ in range(eval_episodes):
         count = 0
@@ -25,9 +26,12 @@ def evaluate(network, eval_episodes=10, epoch=0):
             if reward < -90:
                 col += 1
     avg_reward /= eval_episodes
-    avg_col = col/eval_episodes
+    avg_col = col / eval_episodes
     print("..............................................")
-    print("Average Reward over %i Evaluation Episodes, Epoch %i: %f, %f" % (eval_episodes, epoch, avg_reward, avg_col))
+    print(
+        "Average Reward over %i Evaluation Episodes, Epoch %i: %f, %f"
+        % (eval_episodes, epoch, avg_reward, avg_col)
+    )
     print("..............................................")
     return avg_reward
 
@@ -110,12 +114,26 @@ class TD3(object):
         return self.actor(state).cpu().data.numpy().flatten()
 
     # training cycle
-    def train(self, replay_buffer, iterations, batch_size=100, discount=1, tau=0.005, policy_noise=0.2,  # discount=0.99
-              noise_clip=0.5, policy_freq=2):
+    def train(
+        self,
+        replay_buffer,
+        iterations,
+        batch_size=100,
+        discount=1,
+        tau=0.005,
+        policy_noise=0.2,  # discount=0.99
+        noise_clip=0.5,
+        policy_freq=2,
+    ):
         for it in range(iterations):
             # sample a batch from the replay buffer
-            batch_states, batch_actions, batch_rewards, batch_dones, batch_next_states = replay_buffer.sample_batch(
-                batch_size)
+            (
+                batch_states,
+                batch_actions,
+                batch_rewards,
+                batch_dones,
+                batch_next_states,
+            ) = replay_buffer.sample_batch(batch_size)
             state = torch.Tensor(batch_states).to(device)
             next_state = torch.Tensor(batch_next_states).to(device)
             action = torch.Tensor(batch_actions).to(device)
@@ -161,20 +179,32 @@ class TD3(object):
 
                 # Use soft update to update the actor-target network parameters by
                 # infusing small amount of current parameters
-                for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
-                    target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
+                for param, target_param in zip(
+                    self.actor.parameters(), self.actor_target.parameters()
+                ):
+                    target_param.data.copy_(
+                        tau * param.data + (1 - tau) * target_param.data
+                    )
                 # Use soft update to update the critic-target network parameters by infusing
                 # small amount of current parameters
-                for param, target_param in zip(self.critic.parameters(), self.critic_target.parameters()):
-                    target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
+                for param, target_param in zip(
+                    self.critic.parameters(), self.critic_target.parameters()
+                ):
+                    target_param.data.copy_(
+                        tau * param.data + (1 - tau) * target_param.data
+                    )
 
     def save(self, filename, directory):
-        torch.save(self.actor.state_dict(), '%s/%s_actor.pth' % (directory, filename))
-        torch.save(self.critic.state_dict(), '%s/%s_critic.pth' % (directory, filename))
+        torch.save(self.actor.state_dict(), "%s/%s_actor.pth" % (directory, filename))
+        torch.save(self.critic.state_dict(), "%s/%s_critic.pth" % (directory, filename))
 
     def load(self, filename, directory):
-        self.actor.load_state_dict(torch.load('%s/%s_actor.pth' % (directory, filename)))
-        self.critic.load_state_dict(torch.load('%s/%s_critic.pth' % (directory, filename)))
+        self.actor.load_state_dict(
+            torch.load("%s/%s_actor.pth" % (directory, filename))
+        )
+        self.critic.load_state_dict(
+            torch.load("%s/%s_critic.pth" % (directory, filename))
+        )
 
 
 # Set the parameters for the implementation
@@ -187,7 +217,9 @@ eval_ep = 10  # number of episodes for evaluation
 max_timesteps = 5e6  # Maximum number of steps to perform
 save_models = True  # Weather to save the model or not
 expl_noise = 1  # Initial exploration noise starting value in range [expl_min ... 1]
-expl_decay_steps = 500000  # Number of steps over which the initial exploration noise will decay over
+expl_decay_steps = (
+    500000  # Number of steps over which the initial exploration noise will decay over
+)
 expl_min = 0.1  # Exploration noise after the decay in range [0...expl_noise]
 batch_size = 40  # Size of the mini-batch
 discount = 0.99999  # Discount factor to calculate the discounted future reward (should be close to 1)
@@ -197,7 +229,7 @@ noise_clip = 0.5  # Maximum clamping values of the noise
 policy_freq = 2  # Frequency of Actor network updates
 buffer_size = 1e6  # Maximum size of the buffer
 file_name = "TD3_velodyne"  # name of the file to store the policy
-random_near_obstacle = True # To take random actions near obstacles or not
+random_near_obstacle = True  # To take random actions near obstacles or not
 
 # Create the network storage folders
 if not os.path.exists("./results"):
@@ -206,7 +238,7 @@ if save_models and not os.path.exists("./pytorch_models"):
     os.makedirs("./pytorch_models")
 
 # Create the training environment
-env = GazeboEnv('multi_robot_scenario.launch', 1, 1, 1)
+env = GazeboEnv("multi_robot_scenario.launch", 1, 1, 1)
 time.sleep(5)
 # env.seed(seed)
 torch.manual_seed(seed)
@@ -238,8 +270,16 @@ while timestep < max_timesteps:
     # On termination of episode
     if done:
         if timestep != 0:
-            network.train(replay_buffer, episode_timesteps, batch_size, discount, tau, policy_noise, noise_clip,
-                          policy_freq)
+            network.train(
+                replay_buffer,
+                episode_timesteps,
+                batch_size,
+                discount,
+                tau,
+                policy_noise,
+                noise_clip,
+                policy_freq,
+            )
 
         if timesteps_since_eval >= eval_freq:
             print("Validating")
@@ -260,13 +300,19 @@ while timestep < max_timesteps:
         expl_noise = expl_noise - ((1 - expl_min) / expl_decay_steps)
 
     action = network.get_action(np.array(state))
-    action = (action + np.random.normal(0, expl_noise, size=action_dim)).clip(-max_action, max_action)
+    action = (action + np.random.normal(0, expl_noise, size=action_dim)).clip(
+        -max_action, max_action
+    )
 
     # If the robot is facing an obstacle, randomly force it to take a consistent random action.
     # This is done to increase exploration in situations near obstacles.
     # Training can also be performed without it
     if random_near_obstacle:
-        if np.random.uniform(0, 1) > 0.85 and min(state[4:-8]) < 0.6 and count_rand_actions < 1:
+        if (
+            np.random.uniform(0, 1) > 0.85
+            and min(state[4:-8]) < 0.6
+            and count_rand_actions < 1
+        ):
             count_rand_actions = np.random.randint(8, 15)
             random_action = np.random.uniform(-1, 1, 2)
 
@@ -293,5 +339,6 @@ while timestep < max_timesteps:
 
 # After the training is done, evaluate the network and save it
 evaluations.append(evaluate(network, eval_ep))
-if save_models: network.save("%s" % (file_name), directory="./models")
+if save_models:
+    network.save("%s" % (file_name), directory="./models")
 np.save("./results/%s" % (file_name), evaluations)
