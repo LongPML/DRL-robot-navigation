@@ -10,7 +10,7 @@ FROM nvidia/cuda:${CUDA_VERSION}-cudnn${CUDNN_VERSION}-${CUDA_FLAVOR}-${OS_NAME}
 # Prevent prompting 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Install languages
+# # Install languages
 # RUN apt-get update && apt-get install -y \
 #     locales \
 #     && locale-gen en_US.UTF-8 \
@@ -38,31 +38,28 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     && rm -rf /var/lib/apt/lists/*
 
-# Nvida env
-ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:-compute,utility}
-
 # Essential packages
 RUN apt-get update && \
     apt-get install -y \
-        psmisc wget build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev \
-        libreadline-dev libffi-dev libsqlite3-dev libbz2-dev liblzma-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    psmisc wget build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev \
+    libreadline-dev libffi-dev libsqlite3-dev libbz2-dev liblzma-dev  \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install python
 ARG PYTHON_VERSION=3.8.10
 
-RUN cd /tmp && \
-    wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz && \
-    tar -xvf Python-${PYTHON_VERSION}.tgz && \
-    cd Python-${PYTHON_VERSION} && \
-    ./configure --enable-optimizations && \
-    make && make install && \
-    cd .. && rm Python-${PYTHON_VERSION}.tgz && rm -r Python-${PYTHON_VERSION} && \
-    ln -s /usr/local/bin/python3 /usr/local/bin/python && \
-    ln -s /usr/local/bin/pip3 /usr/local/bin/pip && \
-    python -m pip install --upgrade pip && \
-    rm -r ~/.cache/pip
+RUN cd /tmp \
+    && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \
+    && tar -xvf Python-${PYTHON_VERSION}.tgz \
+    && cd Python-${PYTHON_VERSION} \
+    && ./configure --enable-optimizations \
+    && make && make install \
+    && cd .. && rm Python-${PYTHON_VERSION}.tgz && rm -r Python-${PYTHON_VERSION} \
+    && ln -s /usr/local/bin/python3 /usr/local/bin/python \
+    && ln -s /usr/local/bin/pip3 /usr/local/bin/pip \
+    && python -m pip install --upgrade pip \
+    && rm -r ~/.cache/pip
 
 # Install torch
 ARG PYTORCH_VERSION=1.10.0
@@ -101,11 +98,18 @@ RUN apt-get update && apt-get install -y \
 
 # ROS
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" \
-    > /etc/apt/sources.list.d/ros-latest.list'
-RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
+    > /etc/apt/sources.list.d/ros-latest.list' \
+    && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
 
 RUN apt-get update && apt-get install -y --fix-missing \
     ros-noetic-desktop-full \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Gazebo11
+RUN sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" \
+    > /etc/apt/sources.list.d/gazebo-stable.list' \
+    && wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add - \
+    && apt-get update && apt-get install -y gazebo11 \
     && rm -rf /var/lib/apt/lists/*
 
 # Switch user
