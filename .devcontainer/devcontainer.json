@@ -1,0 +1,43 @@
+// Visualization using VNC
+{
+    // "build": {
+    //     "dockerfile": "Dockerfile",
+    //     "args": {
+    //         // "USERNAME": "noetic"
+    //     }
+    // },
+    "image": "navigate-robot:noetic-py3.8.10-torch1.10.0-cu111",
+    "name": "navigate_robot_test",
+    "remoteUser": "noetic",
+    "privileged": true,
+    "runArgs": [
+        // "--network=host",
+        // "--ipc=host",
+        "--shm-size=1g"
+        // "--gpus=all"
+    ],
+    "workspaceMount": "source=${localWorkspaceFolder},target=/home/noetic/${localWorkspaceFolderBasename},type=bind",
+    "workspaceFolder": "/home/noetic/${localWorkspaceFolderBasename}",
+    "mounts": [
+        "source=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history,target=/home/vscode/.bash_history,type=bind"
+    ],
+    "features": {
+        "ghcr.io/devcontainers/features/desktop-lite:1": {
+            "password": "0",
+            "webPort": 6080,
+            "vncPort": 5901
+        }
+    },
+    "forwardPorts": [
+        6080,
+        5901
+    ],
+    "portsAttributes": {
+        "6080": {
+            "label": "Desktop (Web)"
+        },
+        "5901": {
+            "label": "Desktop (VNC)"
+        }
+    }
+}
