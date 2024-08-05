@@ -3,12 +3,12 @@
     // "build": {
     //     "dockerfile": "Dockerfile",
     //     "args": {
-    //         // "USERNAME": "noetic"
+    //         // "USERNAME": "melodic"
     //     }
     // },
-    "image": "navigate-robot:noetic-py3.8.10-torch1.10.0-cu111",
+    "image": "navigate-robot:melodic-py3.8.10-torch1.10.0-cu111",
     "name": "navigate_robot_test",
-    "remoteUser": "noetic",
+    "remoteUser": "melodic",
     "privileged": true,
     "runArgs": [
         // "--network=host",
@@ -16,8 +16,8 @@
         "--shm-size=1g"
         // "--gpus=all"
     ],
-    "workspaceMount": "source=${localWorkspaceFolder},target=/home/noetic/${localWorkspaceFolderBasename},type=bind",
-    "workspaceFolder": "/home/noetic/${localWorkspaceFolderBasename}",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/home/melodic/${localWorkspaceFolderBasename},type=bind",
+    "workspaceFolder": "/home/melodic/${localWorkspaceFolderBasename}",
     "mounts": [
         "source=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history,target=/home/vscode/.bash_history,type=bind"
     ],

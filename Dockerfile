@@ -1,5 +1,5 @@
 ARG OS_NAME=ubuntu
-ARG OS_VERSION=20.04
+ARG OS_VERSION=18.04
 
 ARG CUDA_VERSION=11.1.1
 ARG CUDNN_VERSION=8
@@ -27,7 +27,7 @@ RUN ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime \
     && rm -rf /var/lib/apt/lists/*
 
 # Add user and setup sudo
-ARG USERNAME=noetic
+ARG USERNAME=melodic
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -47,7 +47,7 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python
-ARG PYTHON_VERSION=3.8.10
+ARG PYTHON_VERSION=3.6.9
 
 RUN cd /tmp \
     && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \
@@ -95,12 +95,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # ROS
+ARG ROS_DISTRO=melodic
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" \
     > /etc/apt/sources.list.d/ros-latest.list' \
-    && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
+    && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
 
 RUN apt-get update && apt-get install -y --fix-missing \
-    ros-noetic-desktop-full \
+    ros-${ROS_DISTRO}-desktop-full \
     && rm -rf /var/lib/apt/lists/*
 
 # Switch user
@@ -108,22 +109,22 @@ USER ${USERNAME}
 
 # ROS environment setup
 SHELL ["/bin/bash", "-c"]
-RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc && source ~/.bashrc
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc && source ~/.bashrc
 
 # ROS dependencies for building packages
-RUN pip install empy catkin_pkg rosdep rosinstall rosinstall-generator wstool \
-    PyQt5 \
+RUN pip install rosdep rosinstall rosinstall-generator wstool \
     && sudo rm -r ~/.cache/pip
+
 RUN sudo apt-get update && sudo apt-get install -y python3-rosdep \
     && sudo rm -rf /var/lib/apt/lists/* \
     && sudo rosdep init && rosdep update
 
-# Install Gazebo11
-RUN sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" \
-    > /etc/apt/sources.list.d/gazebo-stable.list' \
-    && wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add - \
-    && sudo apt-get update && sudo apt-get install -y gazebo11 libgazebo11-dev \
-    && sudo rm -rf /var/lib/apt/lists/*
+# # Install Gazebo
+# RUN sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" \
+#     > /etc/apt/sources.list.d/gazebo-stable.list' \
+#     && wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add - \
+#     && sudo apt-get update && sudo apt-get install -y gazebo11 libgazebo11-dev \
+#     && sudo rm -rf /var/lib/apt/lists/*
 
 # Requirements and environment
 COPY requirements.txt .
