@@ -98,6 +98,7 @@ RUN if [ ! $TORCHAUDIO_VERSION ]; \
 # Essential packages for ROS
 RUN sudo apt-get update && sudo apt-get install -y \
     build-essential curl lsb-release \
+    python3-pip python3-all-dev python3-rospkg \
     && sudo rm -rf /var/lib/apt/lists/*
 
 # ROS
@@ -131,19 +132,13 @@ RUN sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable
     && sudo apt-get update && sudo apt-get install -y gazebo${GAZEBO_VERION} libgazebo${GAZEBO_VERION}-dev \
     && sudo rm -rf /var/lib/apt/lists/*
 
+# Fix Symbol lookup error
+RUN sudo apt-get update \
+    && sudo apt-get upgrade -y libignition-math2
+
 # Requirements and environment
-# COPY requirements.txt .
-# RUN sudo pip install -r requirements.txt
-
-# ENV ROS_HOSTNAME=localhost
-# ENV ROS_MASTER_URI=http://localhost:11311
-# ENV ROS_PORT_SIM=11311
-# ENV GAZEBO_RESOURCE_PATH=/home/${USERNAME}/DRL-robot-navigation/catkin_ws/src/multi_robot_scenario/launch
-
-# RUN echo "export ROS_HOSTNAME=localhost" >> ~/.bashrc \
-# && echo "export ROS_MASTER_URI=http://localhost:11311" >> ~/.bashrc \
-# && echo "export ROS_PORT_SIM=11311" >> ~/.bashrc \
-# && echo "export GAZEBO_RESOURCE_PATH=/home/${USERNAME}/DRL-robot-navigation/catkin_ws/src/multi_robot_scenario/launch" >> ~/.bashrc
+COPY requirements.txt .
+RUN sudo pip install -r requirements.txt
 
 # Set up entrypoint
 COPY entrypoint.sh /entrypoint.sh
