@@ -34,36 +34,36 @@ Main dependencies:
 
 Clone the repository:
 ```shell
-$ cd ~
+cd ~
 ### Clone this repo
-$ git clone https://github.com/reiniscimurs/DRL-robot-navigation
+git clone https://github.com/reiniscimurs/DRL-robot-navigation
 ```
 The network can be run with a standard 2D laser, but this implementation uses a simulated [3D Velodyne sensor](https://github.com/lmark1/velodyne_simulator)
 
 Compile the workspace:
-```shell
-$ cd ~/DRL-robot-navigation/catkin_ws
+```bash
+cd ~/DRL-robot-navigation/catkin_ws
 ### Compile
-$ catkin_make_isolated
+catkin_make_isolated
 ```
 
 Open a terminal and set up sources:
-```shell
-$ export ROS_HOSTNAME=localhost
-$ export ROS_MASTER_URI=http://localhost:11311
-$ export ROS_PORT_SIM=11311
-$ export GAZEBO_RESOURCE_PATH=~/DRL-robot-navigation/catkin_ws/src/multi_robot_scenario/launch
-$ source ~/.bashrc
-$ cd ~/DRL-robot-navigation/catkin_ws
-$ source devel_isolated/setup.bash
+```bash
+export ROS_HOSTNAME=localhost
+export ROS_MASTER_URI=http://localhost:11311
+export ROS_PORT_SIM=11311
+export GAZEBO_RESOURCE_PATH=~/DRL-robot-navigation/catkin_ws/src/multi_robot_scenario/launch
+source ~/.bashrc
+cd ~/DRL-robot-navigation/catkin_ws
+source devel_isolated/setup.bash
 ### Run the training
-$ cd ~/DRL-robot-navigation/TD3
-$ python3 velodyne_td3.py
+cd ~/DRL-robot-navigation/TD3
+python3 velodyne_td3.py
 ```
 
 To kill the training process:
-```shell
-$ killall -9 rosout roslaunch rosmaster gzserver nodelet robot_state_publisher gzclient python python3
+```bash
+killall -9 rosout roslaunch rosmaster gzserver nodelet robot_state_publisher gzclient python python3
 ```
 
 
