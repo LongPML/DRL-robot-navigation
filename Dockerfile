@@ -38,28 +38,35 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     && rm -rf /var/lib/apt/lists/*
 
-# Essential packages
-RUN apt-get update && \
-    apt-get install -y \
-    psmisc wget build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev \
-    libreadline-dev libffi-dev libsqlite3-dev libbz2-dev liblzma-dev  \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Switch user
+USER ${USERNAME}
+SHELL ["/bin/bash", "-c"]
+
+# Essential packages for python
+RUN sudo apt-get update \
+    && sudo apt-get install -y \
+    build-essential zlib1g-dev libncurses5-dev libgdbm-dev \
+    libnss3-dev libssl-dev libreadline-dev libffi-dev wget \
+    && sudo apt-get clean \
+    && sudo rm -rf /var/lib/apt/lists/*
 
 # Install python
 ARG PYTHON_VERSION=3.6.9
+ENV PIP_NO_CACHE_DIR=false
 
 RUN cd /tmp \
     && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \
     && tar -xvf Python-${PYTHON_VERSION}.tgz \
     && cd Python-${PYTHON_VERSION} \
     && ./configure --enable-optimizations \
-    && make && make install \
-    && cd .. && rm Python-${PYTHON_VERSION}.tgz && rm -r Python-${PYTHON_VERSION} \
-    && ln -s /usr/local/bin/python3 /usr/local/bin/python \
-    && ln -s /usr/local/bin/pip3 /usr/local/bin/pip \
-    && python -m pip install --upgrade pip \
-    && rm -r ~/.cache/pip
+    && sudo make install \
+    && cd .. && rm Python-${PYTHON_VERSION}.tgz && sudo rm -r Python-${PYTHON_VERSION} \
+    && sudo ln -s /usr/local/bin/python3 /usr/local/bin/python \
+    && sudo ln -s /usr/local/bin/pip3 /usr/local/bin/pip \
+    && echo "alias python='sudo python3'" >> ~/.bashrc \
+    && echo "alias pip='sudo pip3'" >> ~/.bashrc \
+    && source ~/.bashrc \
+    && sudo python -m pip install --upgrade pip
 
 # Install torch
 ARG PYTORCH_VERSION=1.10.0
@@ -70,65 +77,63 @@ ARG PYTORCH_DOWNLOAD_URL=https://download.pytorch.org/whl/torch_stable.html
 
 RUN if [ ! $TORCHAUDIO_VERSION ]; \
     then \
-    TORCHAUDIO=; \
+        TORCHAUDIO=; \
     else \
-    TORCHAUDIO=torchaudio==${TORCHAUDIO_VERSION}${TORCH_VERSION_SUFFIX}; \
-    fi && \
-    if [ ! $PYTORCH_DOWNLOAD_URL ]; \
+        TORCHAUDIO=torchaudio==${TORCHAUDIO_VERSION}${TORCH_VERSION_SUFFIX}; \
+    fi \
+    && if [ ! $PYTORCH_DOWNLOAD_URL ]; \
     then \
-    pip install \
-    torch==${PYTORCH_VERSION}${TORCH_VERSION_SUFFIX} \
-    torchvision==${TORCHVISION_VERSION}${TORCH_VERSION_SUFFIX} \
-    ${TORCHAUDIO}; \
+        sudo pip install \
+            torch==${PYTORCH_VERSION}${TORCH_VERSION_SUFFIX} \
+            torchvision==${TORCHVISION_VERSION}${TORCH_VERSION_SUFFIX} \
+            ${TORCHAUDIO}; \
     else \
-    pip install \
-    torch==${PYTORCH_VERSION}${TORCH_VERSION_SUFFIX} \
-    torchvision==${TORCHVISION_VERSION}${TORCH_VERSION_SUFFIX} \
-    ${TORCHAUDIO} \
-    -f ${PYTORCH_DOWNLOAD_URL}; \
-    fi && \
-    rm -r ~/.cache/pip
+        sudo pip install \
+            torch==${PYTORCH_VERSION}${TORCH_VERSION_SUFFIX} \
+            torchvision==${TORCHVISION_VERSION}${TORCH_VERSION_SUFFIX} \
+            ${TORCHAUDIO} \
+            -f ${PYTORCH_DOWNLOAD_URL}; \
+    fi
 
 # Essential packages for ROS
-RUN apt-get update && apt-get install -y \
+RUN sudo apt-get update && sudo apt-get install -y \
     build-essential curl lsb-release \
-    && rm -rf /var/lib/apt/lists/*
+    && sudo rm -rf /var/lib/apt/lists/*
 
 # ROS
 ARG ROS_DISTRO=melodic
-RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" \
+RUN sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" \
     > /etc/apt/sources.list.d/ros-latest.list' \
     && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
 
-RUN apt-get update && apt-get install -y --fix-missing \
+RUN sudo apt-get update && sudo apt-get install -y --fix-missing \
     ros-${ROS_DISTRO}-desktop-full \
-    && rm -rf /var/lib/apt/lists/*
-
-# Switch user
-USER ${USERNAME}
+    && sudo rm -rf /var/lib/apt/lists/*
 
 # ROS environment setup
-SHELL ["/bin/bash", "-c"]
-RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc && source ~/.bashrc
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
+    && source ~/.bashrc
 
 # ROS dependencies for building packages
-RUN pip install rosdep rosinstall rosinstall-generator wstool \
-    && sudo rm -r ~/.cache/pip
-
-RUN sudo apt-get update && sudo apt-get install -y python3-rosdep \
-    && sudo rm -rf /var/lib/apt/lists/* \
+RUN sudo pip install rosdep rosinstall rosinstall-generator wstool \
     && sudo rosdep init && rosdep update
 
+# RUN sudo apt-get update && sudo apt-get install -y \
+#     python-rosdep python-rosinstall python-rosinstall-generator python-wstool \
+#     && sudo rm -rf /var/lib/apt/lists/* \
+#     && sudo rosdep init && rosdep update
+
 # # Install Gazebo
-# RUN sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" \
-#     > /etc/apt/sources.list.d/gazebo-stable.list' \
-#     && wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add - \
-#     && sudo apt-get update && sudo apt-get install -y gazebo11 libgazebo11-dev \
-#     && sudo rm -rf /var/lib/apt/lists/*
+ARG GAZEBO_VERION=9
+RUN sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" \
+    > /etc/apt/sources.list.d/gazebo-stable.list' \
+    && wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add - \
+    && sudo apt-get update && sudo apt-get install -y gazebo${GAZEBO_VERION} libgazebo${GAZEBO_VERION}-dev \
+    && sudo rm -rf /var/lib/apt/lists/*
 
 # Requirements and environment
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# COPY requirements.txt .
+# RUN sudo pip install -r requirements.txt
 
 # ENV ROS_HOSTNAME=localhost
 # ENV ROS_MASTER_URI=http://localhost:11311
