@@ -1,5 +1,8 @@
 empy
+catkin_pkg
 tensorboard
+pyyaml
+rospkg
 squaternion
 defusedxml
 netifaces
