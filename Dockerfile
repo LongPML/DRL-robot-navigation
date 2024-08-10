@@ -63,15 +63,14 @@ RUN cd /tmp \
     && cd .. && rm Python-${PYTHON_VERSION}.tgz && sudo rm -r Python-${PYTHON_VERSION} \
     && sudo ln -s /usr/local/bin/python3 /usr/local/bin/python \
     && sudo ln -s /usr/local/bin/pip3 /usr/local/bin/pip \
-    && echo "alias python='sudo python3'" >> ~/.bashrc \
-    && echo "alias pip='sudo pip3'" >> ~/.bashrc \
+    && echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc \
     && source ~/.bashrc \
-    && sudo python -m pip install --upgrade pip
+    && python -m pip install --upgrade pip
 
 # Install torch
-ARG PYTORCH_VERSION=1.10.0
-ARG TORCHVISION_VERSION=0.11.0
-# ARG TORCHAUDIO_VERSION=0.10.0
+ARG PYTORCH_VERSION=1.10.1
+ARG TORCHVISION_VERSION=0.11.2
+# ARG TORCHAUDIO_VERSION=0.10.1
 ARG TORCH_VERSION_SUFFIX=+cu111
 ARG PYTORCH_DOWNLOAD_URL=https://download.pytorch.org/whl/torch_stable.html
 
@@ -95,10 +94,18 @@ RUN if [ ! $TORCHAUDIO_VERSION ]; \
             -f ${PYTORCH_DOWNLOAD_URL}; \
     fi
 
+# ROS configure Ubuntu repositories
+RUN sudo apt-get update \
+    && sudo apt-get install -y software-properties-common \
+    && sudo add-apt-repository universe \
+    && sudo add-apt-repository restricted \
+    && sudo add-apt-repository multiverse \
+    && sudo apt-get update \
+    && sudo rm -rf /var/lib/apt/lists/*
+
 # Essential packages for ROS
 RUN sudo apt-get update && sudo apt-get install -y \
     build-essential curl lsb-release \
-    python3-pip python3-all-dev python3-rospkg \
     && sudo rm -rf /var/lib/apt/lists/*
 
 # ROS
@@ -125,12 +132,12 @@ RUN sudo pip install rosdep rosinstall rosinstall-generator wstool \
 #     && sudo rosdep init && rosdep update
 
 # # Install Gazebo
-ARG GAZEBO_VERION=9
-RUN sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" \
-    > /etc/apt/sources.list.d/gazebo-stable.list' \
-    && wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add - \
-    && sudo apt-get update && sudo apt-get install -y gazebo${GAZEBO_VERION} libgazebo${GAZEBO_VERION}-dev \
-    && sudo rm -rf /var/lib/apt/lists/*
+# ARG GAZEBO_VERION=9
+# RUN sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" \
+#     > /etc/apt/sources.list.d/gazebo-stable.list' \
+#     && wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add - \
+#     && sudo apt-get update && sudo apt-get install -y gazebo${GAZEBO_VERION} libgazebo${GAZEBO_VERION}-dev \
+#     && sudo rm -rf /var/lib/apt/lists/*
 
 # Fix Symbol lookup error
 RUN sudo apt-get update \
