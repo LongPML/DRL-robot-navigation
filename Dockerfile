@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     && locale-gen en_US.UTF-8 \
     && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
-ENV LANG en_US.UTF-8
+ENV LANG=en_US.UTF-8
 
 # Install timezone
 RUN ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime \
@@ -65,7 +65,7 @@ RUN cd /tmp \
     && sudo ln -s /usr/local/bin/pip3 /usr/local/bin/pip \
     && echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc \
     && source ~/.bashrc \
-    && python -m pip install --upgrade pip
+    && sudo python -m pip install --upgrade pip
 
 # Install torch
 ARG PYTORCH_VERSION=1.10.1
@@ -124,6 +124,7 @@ RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
 
 # ROS dependencies for building packages
 RUN sudo pip install rosdep rosinstall rosinstall-generator wstool \
+    rospkg catkin_tools\
     && sudo rosdep init && rosdep update
 
 # RUN sudo apt-get update && sudo apt-get install -y \
