@@ -6,7 +6,7 @@
     //         // "USERNAME": "melodic"
     //     }
     // },
-    "image": "navigate-robot:melodic-py3.8.10-torch1.10.0-cu111",
+    "image": "longpml/navigate-robot:melodic-py3.8.10-torch1.10.0-cu111",
     "name": "navigate_robot_test",
     "remoteUser": "melodic",
     "privileged": true,

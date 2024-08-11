@@ -17,5 +17,5 @@ docker run -it \
     --env="NVIDIA_DRIVER_CAPABILITIES=all" \
     --env="NVIDIA_VISIBLE_DEVICES=all" \
     --device /dev/dri:/dev/dri \
-    navigate-robot:melodic-py3.8.10-torch1.10.0-cu111 \
+    longpml/navigate-robot:melodic-py3.8.10-torch1.10.0-cu111 \
     bash
