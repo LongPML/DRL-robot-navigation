@@ -20,7 +20,6 @@ ENV LANG=en_US.UTF-8
 
 # Install timezone
 RUN ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime \
-    && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
     && apt-get install -y tzdata \
     && dpkg-reconfigure --frontend noninteractive tzdata \
@@ -114,7 +113,7 @@ RUN sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) 
     > /etc/apt/sources.list.d/ros-latest.list' \
     && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
 
-RUN sudo apt-get update && sudo apt-get install -y --fix-missing \
+RUN sudo apt-get update && sudo apt-get install -y \
     ros-${ROS_DISTRO}-desktop-full \
     && sudo rm -rf /var/lib/apt/lists/*
 
@@ -124,7 +123,6 @@ RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
 
 # ROS dependencies for building packages
 RUN sudo pip install rosdep rosinstall rosinstall-generator wstool \
-    rospkg catkin_tools\
     && sudo rosdep init && rosdep update
 
 # RUN sudo apt-get update && sudo apt-get install -y \
