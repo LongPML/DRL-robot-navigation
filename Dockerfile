@@ -64,11 +64,11 @@ RUN cd /tmp \
     && sudo ln -s /usr/local/bin/pip3 /usr/local/bin/pip \
     && echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc \
     && source ~/.bashrc \
-    && python -m pip install --upgrade pip
+    && sudo python -m pip install --upgrade pip
 
 # Install torch
-ARG PYTORCH_VERSION=1.10.0
-ARG TORCHVISION_VERSION=0.11.0
+ARG PYTORCH_VERSION=1.10.1
+ARG TORCHVISION_VERSION=0.11.2
 # ARG TORCHAUDIO_VERSION=0.10.0
 ARG TORCH_VERSION_SUFFIX=+cu111
 ARG PYTORCH_DOWNLOAD_URL=https://download.pytorch.org/whl/torch_stable.html
@@ -129,14 +129,14 @@ RUN sudo apt-get update && sudo apt-get install -y \
     && sudo rosdep init && rosdep update \
     && sudo rm -rf /var/lib/apt/lists/*
 
-# Install Gazebo
-ARG GAZEBO_VERSION=11
-RUN sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" \
-    > /etc/apt/sources.list.d/gazebo-stable.list' \
-    && wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add - \
-    && sudo apt-get update && sudo apt-get install -y \
-    gazebo${GAZEBO_VERSION} libgazebo${GAZEBO_VERSION}-dev \
-    && sudo rm -rf /var/lib/apt/lists/*
+# # Install Gazebo
+# ARG GAZEBO_VERSION=11
+# RUN sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" \
+#     > /etc/apt/sources.list.d/gazebo-stable.list' \
+#     && wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add - \
+#     && sudo apt-get update && sudo apt-get install -y \
+#     gazebo${GAZEBO_VERSION} libgazebo${GAZEBO_VERSION}-dev \
+#     && sudo rm -rf /var/lib/apt/lists/*
 
 # Requirements and environment
 COPY requirements.txt .
