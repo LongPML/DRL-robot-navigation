@@ -142,7 +142,8 @@ RUN sudo pip install rosdep rosinstall rosinstall-generator wstool \
 
 # Fix Symbol lookup error
 RUN sudo apt-get update \
-    && sudo apt-get upgrade -y libignition-math2
+    && sudo apt-get upgrade -y libignition-math2 \
+    && sudo rm -rf /var/lib/apt/lists/*
 
 # Requirements and environment
 COPY requirements.txt .
