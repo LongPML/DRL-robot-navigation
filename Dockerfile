@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     && locale-gen en_US.UTF-8 \
     && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
-ENV LANG en_US.UTF-8
+ENV LANG=en_US.UTF-8
 
 # Install timezone
 RUN ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime \
@@ -69,7 +69,7 @@ RUN cd /tmp \
 # Install torch
 ARG PYTORCH_VERSION=1.10.1
 ARG TORCHVISION_VERSION=0.11.2
-# ARG TORCHAUDIO_VERSION=0.10.0
+# ARG TORCHAUDIO_VERSION=0.10.1
 ARG TORCH_VERSION_SUFFIX=+cu111
 ARG PYTORCH_DOWNLOAD_URL=https://download.pytorch.org/whl/torch_stable.html
 
@@ -114,7 +114,7 @@ RUN sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) 
 
 # Install ROS
 ARG ROS_DISTRO=noetic
-RUN sudo apt-get update && sudo -E apt-get install -y \
+RUN sudo apt-get update && sudo -E apt-get install -y --fix-missing \
     ros-${ROS_DISTRO}-desktop-full \
     && sudo rm -rf /var/lib/apt/lists/*
 
@@ -139,8 +139,8 @@ RUN sudo apt-get update && sudo apt-get install -y \
 #     && sudo rm -rf /var/lib/apt/lists/*
 
 # Requirements and environment
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# COPY requirements.txt .
+# RUN pip install -r requirements.txt
 
 # Set up entrypoint
 COPY entrypoint.sh /entrypoint.sh
