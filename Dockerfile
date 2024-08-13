@@ -123,11 +123,14 @@ RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
     && source ~/.bashrc
 
 # ROS dependencies for building packages
-RUN sudo apt-get update && sudo apt-get install -y \
-    python3-rosdep python3-rosinstall \
-    python3-rosinstall-generator python3-wstool build-essential \
-    && sudo rosdep init && rosdep update \
-    && sudo rm -rf /var/lib/apt/lists/*
+# RUN sudo apt-get update && sudo apt-get install -y \
+#     python3-rosdep python3-rosinstall \
+#     python3-rosinstall-generator python3-wstool build-essential \
+#     && sudo rosdep init && rosdep update \
+#     && sudo rm -rf /var/lib/apt/lists/*
+
+RUN sudo pip install rosdep rosinstall rosinstall-generator wstool \
+    && sudo rosdep init && rosdep update 
 
 # # Install Gazebo
 # ARG GAZEBO_VERSION=11
@@ -139,8 +142,8 @@ RUN sudo apt-get update && sudo apt-get install -y \
 #     && sudo rm -rf /var/lib/apt/lists/*
 
 # Requirements and environment
-# COPY requirements.txt .
-# RUN pip install -r requirements.txt
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
 # Set up entrypoint
 COPY entrypoint.sh /entrypoint.sh
