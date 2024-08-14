@@ -114,7 +114,7 @@ RUN sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) 
 
 # Install ROS
 ARG ROS_DISTRO=noetic
-RUN sudo apt-get update && sudo -E apt-get install -y --fix-missing \
+RUN sudo apt-get update && sudo -E apt-get install -y \
     ros-${ROS_DISTRO}-desktop-full \
     && sudo rm -rf /var/lib/apt/lists/*
 
