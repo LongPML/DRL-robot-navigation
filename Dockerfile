@@ -64,7 +64,7 @@ RUN cd /tmp \
     && sudo ln -s /usr/local/bin/pip3 /usr/local/bin/pip \
     && echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc \
     && source ~/.bashrc \
-    && sudo python -m pip install --upgrade pip
+    && pip install --upgrade pip
 
 # Install torch
 ARG PYTORCH_VERSION=1.10.1
@@ -129,7 +129,8 @@ RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
 #     && sudo rosdep init && rosdep update \
 #     && sudo rm -rf /var/lib/apt/lists/*
 
-RUN sudo pip install rosdep rosinstall rosinstall-generator wstool \
+RUN pip install rosinstall rosinstall-generator wstool \
+    && sudo pip install -U rosdep \
     && sudo rosdep init && rosdep update 
 
 # # Install Gazebo

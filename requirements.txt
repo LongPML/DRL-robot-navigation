@@ -1,4 +1,7 @@
 empy
+# catkin_pkg
+# pyyaml
+# rospkg
 tensorboard
 squaternion
 defusedxml
