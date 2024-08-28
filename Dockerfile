@@ -3,7 +3,7 @@ ARG OS_VERSION=20.04
 
 ARG CUDA_VERSION=11.1.1
 ARG CUDNN_VERSION=8
-ARG CUDA_FLAVOR=runtime    #runtime, devel
+ARG CUDA_FLAVOR=devel    #runtime, devel
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn${CUDNN_VERSION}-${CUDA_FLAVOR}-${OS_NAME}${OS_VERSION}
 
